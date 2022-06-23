@@ -1,6 +1,7 @@
 https://www.kaggle.com/competitions/gan-getting-started/overview
 
-# I'm Something of a Painter Myself - Orel Ben-Zaken and Omer Lux
+# I'm Something of a Painter Myself - 
+## Orel Ben-Zaken and Omer Lux
 
 We recognize the works of artists through their unique style, such as color choices or brush strokes. The “je ne sais quoi” of artists like Claude Monet can now be imitated with algorithms thanks to generative adversarial networks (GANs). In this getting started competition, you will bring that style to your photos or recreate the style from scratch!
 

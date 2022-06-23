@@ -1,11 +1,12 @@
-import datetime
 import os
-import shutil
-import numpy as np
-import torch
-import matplotlib.pyplot as plt
-import pandas as pd
 import PIL
+import torch
+import shutil
+import datetime
+import numpy as np
+import pandas as pd
+import tensorflow.keras as keras
+import matplotlib.pyplot as plt
 from layers.Augmentations import DiffAugment
 
 plt.switch_backend('agg')
@@ -135,14 +136,14 @@ def display_augmented_samples(path, name, ds, num_images=1):
         x = DiffAugment(img[None, :, :, :])[0]
         ax = plt.subplot(2, num_images, j + 1)
         plt.axis('off')
-        ax.set_title("origin")
+        ax.set_title("Origin")
         ax.imshow(img)
         ax = plt.subplot(2, num_images, (j + num_images) + 1)
         plt.axis('off')
-        ax.set_title("augmented")
+        ax.set_title("Augmented")
         ax.imshow(x)
-    path = os.path.join(path, "images", f"{name}_augmented.png")
-    fig.suptitle(f"{name} augmented")
+    path = os.path.join(path, "images", f"{name.split('-')[0]}_Augmented.png")
+    fig.suptitle(f"{name} Augmentations")
     plt.savefig(path)
     plt.show()
 
@@ -154,7 +155,7 @@ def display_generated_samples(path, ds, model, n_samples):
         generated_sample = model.predict(example_sample)
 
         plt.subplot(121)
-        plt.title("input image")
+        plt.title("Input image")
         plt.imshow(example_sample[0] * 0.5 + 0.5)
         plt.axis('off')
 
@@ -177,3 +178,32 @@ def predict_and_save(path, input_ds, generator_model):
         im = PIL.Image.fromarray(prediction)
         im.save(os.path.join(path, "generated", '{}.jpg'.format(i)))
         i += 1
+
+
+class LogCallback(keras.callbacks.Callback):
+    def __init__(self, logger, log_interval):
+        self.logger = logger
+        self.log_interval = log_interval
+
+    def on_train_batch_end(self, batch, logs=None):
+        if batch % self.log_interval == 0:
+            self.logger.info(
+                "| \t\tbatch {} | monet_gen_loss: {:2.5f}, photo_gen_loss: {:2.5f}, monet_disc_loss: {:2.5f},"
+                "photo_disc_loss: {:2.5f}, total_cycle_loss: {:2.5f}".format(batch, logs["monet_gen_loss"],
+                    logs["photo_gen_loss"], logs["monet_disc_loss"], logs["photo_disc_loss"], logs["total_cycle_loss"])
+            )
+
+    # def on_test_batch_end(self, batch, logs=None):
+    #     print(
+    #         "Up to batch {}, the average loss is {:7.2f}.".format(batch, logs["loss"])
+    #     )
+
+    def on_epoch_end(self, epoch, logs=None):
+        self.logger.info(
+            "| End of Epoch {} | monet_gen_loss: {:2.5f}, photo_gen_loss: {:2.5f}, monet_disc_loss: {:2.5f},"
+            "photo_disc_loss: {:2.5f}, total_cycle_loss: {:2.5f}".format(epoch + 1, logs["monet_gen_loss"],
+                                                                         logs["photo_gen_loss"],
+                                                                         logs["monet_disc_loss"],
+                                                                         logs["photo_disc_loss"],
+                                                                         logs["total_cycle_loss"])
+        )

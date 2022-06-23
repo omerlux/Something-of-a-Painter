@@ -12,7 +12,8 @@ from exp.exp_basic import Exp_Basic
 from models import CycleGan
 from utils.tools import EarlyStopping, adjust_learning_rate, visual
 from utils.metrics import discriminator_loss, generator_loss, calc_cycle_loss, identity_loss
-from utils.tools import display_samples, display_augmented_samples, display_generated_samples, predict_and_save
+from utils.tools import display_samples, display_augmented_samples, display_generated_samples, predict_and_save, \
+    LogCallback
 
 warnings.filterwarnings('ignore')
 
@@ -58,10 +59,12 @@ class Exp_Main(Exp_Basic):
     def train(self, setting):
         self.logger.info("| Loading data '{}'".format(self.args.data))
         gan_ds, monet_ds, photo_ds = self._get_data()
-        display_samples(path=self.args.save, name="monet", ds=monet_ds.batch(1), row=4, col=6)
-        display_samples(path=self.args.save, name="photo", ds=photo_ds.batch(1), row=4, col=6)
-        display_augmented_samples(path=self.args.save, name="monet", ds=monet_ds.batch(1), num_images=4)
-        display_augmented_samples(path=self.args.save, name="photo", ds=monet_ds.batch(1), num_images=4)
+        display_samples(path=self.args.save, name="Monet", ds=monet_ds.batch(1), row=4, col=6)
+        display_samples(path=self.args.save, name="Photo", ds=photo_ds.batch(1), row=4, col=6)
+        display_augmented_samples(path=self.args.save, name="Monet-{}".format(self.args.augment),
+                                  ds=monet_ds.batch(1), num_images=4)
+        display_augmented_samples(path=self.args.save, name="Photo-{}".format(self.args.augment),
+                                  ds=monet_ds.batch(1), num_images=4)
 
         self.chkpath = os.path.join(self.args.save, setting, self.args.checkpoints)
         if not os.path.exists(self.chkpath):
@@ -85,10 +88,9 @@ class Exp_Main(Exp_Basic):
                 steps_per_epoch=(self.n_monet // self.args.batch_size),
                 epochs=self.args.train_epochs,
                 verbose=1,
-                callbacks=[WandbCallback(
-                    log_batch_frequency=self.args.log_interval,  # 10
-                    # log_evaluation_frequency=1
-                ),
+                callbacks=[
+                    LogCallback(self.logger, self.args.log_interval),
+                    WandbCallback(log_batch_frequency=self.args.log_interval),  # 10
                     keras.callbacks.ModelCheckpoint(filepath=self.chkpath,
                                                     save_weights_only=True,
                                                     verbose=1)
@@ -101,6 +103,7 @@ class Exp_Main(Exp_Basic):
                 epochs=self.args.train_epochs,
                 verbose=1,
                 callbacks=[
+                    LogCallback(self.logger, self.args.log_interval),
                     keras.callbacks.ModelCheckpoint(filepath=os.path.join(self.chkpath, 'cp.ckpt'),
                                                     save_weights_only=True,
                                                     verbose=1)

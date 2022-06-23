@@ -26,8 +26,9 @@ parser.add_argument('--seed', type=int, default=2021, help='seed number')
 # data loader
 parser.add_argument('--data', type=str, default='IGDK', help='dataset type')
 parser.add_argument('--root_path', type=str, default='../../data/Image_Generation_Data_Kaggle/', help='root path of the data file')
-parser.add_argument('--augment', nargs="+", type=str, default=["color", "translation", "cutout"],
-                    help='kind of augmentation to apply')
+parser.add_argument('--checkpoints', type=str, default='checkpoints', help='location of model checkpoints')
+parser.add_argument('--augment', nargs="+", type=str, default=[],
+                    help='kind of augmentation to apply ["color", "translation", "cutout"]')
 
 # model and task parameters task
 parser.add_argument('--height', type=int, default=256)
@@ -40,7 +41,7 @@ parser.add_argument('--do_predict', action='store_true', help='whether to predic
 # optimization
 parser.add_argument('--num_workers', type=int, default=10, help='data loader num workers')
 parser.add_argument('--itr', type=int, default=1, help='experiments times')
-parser.add_argument('--log_interval', type=int, default=10, help='training log print interval')
+parser.add_argument('--log_interval', type=int, default=20, help='training log print interval')
 parser.add_argument('--train_epochs', type=int, default=50, help='train epochs')
 parser.add_argument('--batch_size', type=int, default=1, help='batch size of train input data')
 parser.add_argument('--learning_rate', type=float, default=2e-4, help='optimizer learning rate')

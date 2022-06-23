@@ -1,112 +1,23 @@
-Mainly based on https://github.com/thuml/Autoformer .
+https://www.kaggle.com/competitions/gan-getting-started/overview
 
-# Autoformer (NeurIPS 2021)
+# I'm Something of a Painter Myself - Orel Ben-Zaken and Omer Lux
 
-Autoformer: Decomposition Transformers with Auto-Correlation for Long-Term Series Forecasting
+We recognize the works of artists through their unique style, such as color choices or brush strokes. The “je ne sais quoi” of artists like Claude Monet can now be imitated with algorithms thanks to generative adversarial networks (GANs). In this getting started competition, you will bring that style to your photos or recreate the style from scratch!
 
-Time series forecasting is a critical demand for real applications. Enlighted by the classic time series analysis and stochastic process theory, we propose the Autoformer as a general series forecasting model [[paper](https://arxiv.org/abs/2106.13008)]. **Autoformer goes beyond the Transformer family and achieves the series-wise connection for the first time.**
+Computer vision has advanced tremendously in recent years and GANs are now capable of mimicking objects in a very convincing way. But creating museum-worthy masterpieces is thought of to be, well, more art than science. So can (data) science, in the form of GANs, trick classifiers into believing you’ve created a true Monet? That’s the challenge you’ll take on!
 
-In long-term forecasting, Autoformer achieves SOTA, with a **38% relative improvement** on six benchmarks, covering five practical applications: **energy, traffic, economics, weather and disease**.
 
-## Autoformer vs. Transformers
+## The Challenge:
 
-**1. Deep decomposition architecture**
+A GAN consists of at least two neural networks: a generator model and a discriminator model. The generator is a neural network that creates the images. For our competition, you should generate images in the style of Monet. This generator is trained using a discriminator.
 
-We renovate the Transformer as a deep decomposition architecture, which can progressively decompose the trend and seasonal components during the forecasting process.
+The two models will work against each other, with the generator trying to trick the discriminator, and the discriminator trying to accurately classify the real vs. generated images.
 
-<p align="center">
-<img src=".\pic\Autoformer.png" height = "250" alt="" align=center />
-<br><br>
-<b>Figure 1.</b> Overall architecture of Autoformer.
-</p>
+Your task is to build a GAN that generates 7,000 to 10,000 Monet-style images.
 
-**2. Series-wise Auto-Correlation mechanism**
 
-Inspired by the stochastic process theory, we design the Auto-Correlation mechanism, which can discover period-based dependencies and aggregate the information at the series level. This empowers the model with inherent log-linear complexity. This series-wise connection contrasts clearly from the previous self-attention family.
-
-<p align="center">
-<img src=".\pic\Auto-Correlation.png" height = "250" alt="" align=center />
-<br><br>
-<b>Figure 2.</b> Auto-Correlation mechansim.
-</p>
-
-## Get Started
-
-1. Install Python 3.6, PyTorch 1.9.0.
-2. Download data. You can obtain all the six benchmarks from [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/e1ccfff39ad541908bae/) or [Google Drive](https://drive.google.com/drive/folders/1ZOYpTUa82_jCcxIdTmyr0LXQfvaM9vIy?usp=sharing). **All the datasets are well pre-processed** and can be used easily.
-3. Train the model. We provide the experiment scripts of all benchmarks under the folder `./scripts`. You can reproduce the experiment results by:
-
-```bash
-bash ./scripts/ETT_script/Autoformer_ETTm1.sh
-bash ./scripts/ECL_script/Autoformer.sh
-bash ./scripts/Exchange_script/Autoformer.sh
-bash ./scripts/Traffic_script/Autoformer.sh
-bash ./scripts/Weather_script/Autoformer.sh
-bash ./scripts/ILI_script/Autoformer.sh
-```
-
-4. Sepcial-designed implementation
-
-- **Speedup Auto-Correlation:** We built the Auto-Correlation mechanism as a batch-normalization-style block to make it more memory-access friendly. See the [paper](https://arxiv.org/abs/2106.13008) for details.
-
-- **Without the position embedding:** Since the series-wise connection will inherently keep the sequential information, Autoformer does not need the position embedding, which is different from Transformers.
-
-### Reproduce with Docker
-
-To easily reproduce the results using Docker, conda and Make,  you can follow the next steps:
-1. Initialize the docker image using: `make init`. 
-2. Download the datasets using: `make get_dataset`.
-3. Run each script in `scripts/` using `make run_module module="bash scripts/ETT_script/Autoformer_ETTm1.sh"` for each script.
-4. Alternatively, run all the scripts at once:
-```
-for file in `ls scripts`; do make run_module module="bash scripts/$script"; done
-```
-
-## Main Results
-
-We experiment on six benchmarks, covering five main-stream applications. We compare our model with ten baselines, including Informer, N-BEATS, etc. Generally, for the long-term forecasting setting, Autoformer achieves SOTA, with a **38% relative improvement** over previous baselines.
-
-<p align="center">
-<img src=".\pic\results.png" height = "550" alt="" align=center />
-</p>
-
-## Baselines
-
-We will keep adding series forecasting models to expand this repo:
-
-- [x] Autoformer
-- [x] Informer
-- [x] Transformer
-- [ ] LogTrans
-- [ ] Reformer
-- [ ] N-BEATS
-
-## Citation
-
-If you find this repo useful, please cite our paper. 
-
-```
-@inproceedings{wu2021autoformer,
-  title={Autoformer: Decomposition Transformers with {Auto-Correlation} for Long-Term Series Forecasting},
-  author={Haixu Wu and Jiehui Xu and Jianmin Wang and Mingsheng Long},
-  booktitle={Advances in Neural Information Processing Systems},
-  year={2021}
-}
-```
-
-## Contact
-
-If you have any question or want to use the code, please contact whx20@mails.tsinghua.edu.cn .
 
 ## Acknowledgement
 
-We appreciate the following github repos a lot for their valuable code base or datasets:
-
-https://github.com/thuml/Autoformer
-
-https://github.com/zhouhaoyi/Informer2020
-
-https://github.com/zhouhaoyi/ETDataset
-
-https://github.com/laiguokun/multivariate-time-series-data
+https://www.kaggle.com/code/amyjang/monet-cyclegan-tutorial/notebook
 

@@ -98,7 +98,12 @@ class Exp_Main(Exp_Basic):
                 gan_ds,
                 steps_per_epoch=(self.n_monet // self.args.batch_size),
                 epochs=self.args.train_epochs,
-                verbose=1
+                verbose=1,
+                callbacks=[
+                    keras.callbacks.ModelCheckpoint(filepath=self.chkpath,
+                                                    save_weights_only=True,
+                                                    verbose=1)
+                ]
             )
 
         display_generated_samples(

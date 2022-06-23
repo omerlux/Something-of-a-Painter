@@ -97,7 +97,7 @@ if args.is_training:
 
         args.save = 'saves/{}-{}'.format(args.save, time.strftime("%Y%m%d-%H%M%S"))
 
-    if 'Transformer' in args.model:
+    if 'ResCycleGan' in args.model:
         model_script = 'models/CycleGan.py'
     else:
         model_script = 'models/CycleGan.py'

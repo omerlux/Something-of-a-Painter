@@ -1,0 +1,7 @@
+nohup python3 run.py --devices 3 --train_epochs 50 --model CycleGan --model_id noaug --do_predict --wandb > nohup_cg_noaug.out &
+
+nohup python3 run.py --devices 3 --train_epochs 50 --model ResCycleGan --model_id noaug --do_predict --wandb > nohup_rcg_noaug.out &
+
+nohup python3 run.py --devices 3 --train_epochs 50 --model CycleGan --augment color translation cutout --model_id allaug --do_predict --wandb > nohup_cg_allaug.out &
+
+nohup python3 run.py --devices 3 --train_epochs 50 --model ResCycleGan --augment color translation cutout --model_id allaug --do_predict --wandb > nohup_rcg_allaug.out &

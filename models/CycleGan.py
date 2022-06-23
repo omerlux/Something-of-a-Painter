@@ -28,6 +28,7 @@ class Model(keras.Model):
             self.p_disc = Discriminator.discriminator_fn(args.height, args.width, args.channels)
         self.wandb = args.wandb
         self.lambda_cycle = lambda_cycle
+        self.build((None,) + (self.height, self.width, self.channels))
 
     def compile(self,
             m_gen_optimizer,
@@ -50,6 +51,9 @@ class Model(keras.Model):
         self.cycle_loss_fn = cycle_loss_fn
         self.identity_loss_fn = identity_loss_fn
         self.augment = augment
+
+    def call(self, input, training=False):
+        return self.m_gen(input, training=training)
 
     def train_step(self, batch_data):
         real_monet, real_photo = batch_data

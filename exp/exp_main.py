@@ -3,6 +3,7 @@ import wandb
 import shutil
 import warnings
 import numpy as np
+import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import optimizers
 from wandb.keras import WandbCallback
@@ -80,7 +81,8 @@ class Exp_Main(Exp_Basic):
                            cycle_loss_fn=calc_cycle_loss,
                            identity_loss_fn=identity_loss,
                            augment=self.args.augment)
-        # TODO: save checkpoints
+
+        self.model.save_weights(os.path.join(self.chkpath, 'cp.ckpt'))
 
         if self.args.wandb:
             self.history = self.model.fit(
@@ -91,8 +93,8 @@ class Exp_Main(Exp_Basic):
                 callbacks=[
                     LogCallback(self.logger, self.args.log_interval),
                     WandbCallback(log_batch_frequency=self.args.log_interval),  # 10
-                    keras.callbacks.ModelCheckpoint(filepath=self.chkpath,
-                                                    save_weights_only=True,
+                    keras.callbacks.ModelCheckpoint(filepath=os.path.join(self.chkpath, 'cp.ckpt'),
+                                                    save_weights_only=False,
                                                     verbose=1)
                 ]
             )
@@ -110,6 +112,11 @@ class Exp_Main(Exp_Basic):
                 ]
             )
 
+        # Save the whole model
+        self.model.compute_output_shape(input_shape=(None, self.args.height, self.args.width, self.args.channels))
+        keras.Model.save(self.model, os.path.join(self.chkpath, "model"), save_format='tf')
+        # tf.saved_model.save(self.model, os.path.join(self.chkpath, "model"))
+
         display_generated_samples(
             path=self.args.save,
             ds=photo_ds.batch(1),
@@ -121,12 +128,13 @@ class Exp_Main(Exp_Basic):
 
     def predict(self, setting):
         self.chkpath = os.path.join(self.args.save, setting, self.args.checkpoints)
-        self.model.load_weights(os.path.join(self.chkpath, 'cp.ckpt'))
+        loaded_model = tf.keras.models.load_model(os.path.join(self.chkpath, "model"))
+        # self.model.load_weights(os.path.join(self.chkpath, 'cp.ckpt'))
 
         predict_and_save(
             path=self.args.save,
             input_ds=self.photo_ds.batch(1),
-            generator_model=self.model.m_gen
+            generator_model=loaded_model.m_gen        # Monet Generator
         )
         images_path = os.path.join(self.args.save, 'generated')
         shutil.make_archive(images_path, 'zip')

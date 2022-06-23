@@ -26,8 +26,8 @@ parser.add_argument('--seed', type=int, default=2021, help='seed number')
 # data loader
 parser.add_argument('--data', type=str, default='IGDK', help='dataset type')
 parser.add_argument('--root_path', type=str, default='../../data/Image_Generation_Data_Kaggle/', help='root path of the data file')
-parser.add_argument('--augment', action='store_true', help='augment the dataset')
-parser.add_argument('--checkpoints', type=str, default='checkpoints', help='location of model checkpoints')
+parser.add_argument('--augment', nargs="+", type=str, default=["color", "translation", "cutout"],
+                    help='kind of augmentation to apply')
 
 # model and task parameters task
 parser.add_argument('--height', type=int, default=256)
@@ -93,6 +93,9 @@ if args.is_training:
 
     main_script = 'exp/exp_main.py'
     create_exp_dir(args.save, scripts_to_save=[model_script, main_script])
+
+else:
+    args.save = os.path.join('saves', args.save)
 
 # setting logger
 log_format = '%(asctime)s %(message)s'

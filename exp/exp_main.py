@@ -75,7 +75,8 @@ class Exp_Main(Exp_Basic):
                            gen_loss_fn=generator_loss,
                            disc_loss_fn=discriminator_loss,
                            cycle_loss_fn=calc_cycle_loss,
-                           identity_loss_fn=identity_loss)
+                           identity_loss_fn=identity_loss,
+                           augment=self.args.augment)
         # TODO: save checkpoints
 
         if self.args.wandb:
@@ -100,7 +101,7 @@ class Exp_Main(Exp_Basic):
                 epochs=self.args.train_epochs,
                 verbose=1,
                 callbacks=[
-                    keras.callbacks.ModelCheckpoint(filepath=self.chkpath,
+                    keras.callbacks.ModelCheckpoint(filepath=os.path.join(self.chkpath, 'cp.ckpt'),
                                                     save_weights_only=True,
                                                     verbose=1)
                 ]
@@ -116,8 +117,8 @@ class Exp_Main(Exp_Basic):
         return self.model
 
     def predict(self, setting):
-
-        self.model.load_weights(self.chkpath)
+        self.chkpath = os.path.join(self.args.save, setting, self.args.checkpoints)
+        self.model.load_weights(os.path.join(self.chkpath, 'cp.ckpt'))
 
         predict_and_save(
             path=self.args.save,

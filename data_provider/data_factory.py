@@ -38,38 +38,35 @@ def load_dataset(filenames):
     return dataset
 
 
-def data_augment(image):
-    p_spatial = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
-    p_rotate = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
-    #     p_crop = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+# def data_augment(image):
+#     p_spatial = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+#     p_rotate = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+#     #     p_crop = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+#
+#     # 90º rotations
+#     if p_rotate > .8:
+#         image = tf.image.rot90(image, k=3)  # rotate 270º
+#     elif p_rotate > .6:
+#         image = tf.image.rot90(image, k=2)  # rotate 180º
+#     elif p_rotate > .4:
+#         image = tf.image.rot90(image, k=1)  # rotate 90º
+#
+#     # Flips
+#     image = tf.image.random_flip_left_right(image)
+#     image = tf.image.random_flip_up_down(image)
+#     if p_spatial > .75:
+#         image = tf.image.transpose(image)
+#
+#     # Train on crops
+#     image = tf.image.random_crop(image, size=[HEIGHT, WIDTH, CHANNELS])
+#
+#     return image
 
-    # 90º rotations
-    if p_rotate > .8:
-        image = tf.image.rot90(image, k=3)  # rotate 270º
-    elif p_rotate > .6:
-        image = tf.image.rot90(image, k=2)  # rotate 180º
-    elif p_rotate > .4:
-        image = tf.image.rot90(image, k=1)  # rotate 90º
 
-    # Flips
-    image = tf.image.random_flip_left_right(image)
-    image = tf.image.random_flip_up_down(image)
-    if p_spatial > .75:
-        image = tf.image.transpose(image)
-
-    # Train on crops
-    image = tf.image.random_crop(image, size=[HEIGHT, WIDTH, CHANNELS])
-
-    return image
-
-
-def get_gan_dataset(monet_files, photo_files, augment=None, repeat=True, shuffle=True, batch_size=1):
+def get_gan_dataset(monet_files, photo_files, repeat=True, shuffle=True, batch_size=1):
     monet_ds = load_dataset(monet_files)
     photo_ds = load_dataset(photo_files)
 
-    if augment:
-        monet_ds = monet_ds.map(data_augment, num_parallel_calls=AUTO)
-        photo_ds = photo_ds.map(data_augment, num_parallel_calls=AUTO)
     if repeat:
         monet_ds = monet_ds.repeat()
         photo_ds = photo_ds.repeat()
@@ -108,6 +105,6 @@ def data_provider(args, logger):
 
     monet_ds = load_dataset(MONET_FILENAMES)
     photo_ds = load_dataset(PHOTO_FILENAMES)
-    gan_ds = get_gan_dataset(MONET_FILENAMES, PHOTO_FILENAMES, augment=args.augment, batch_size=args.batch_size)
+    gan_ds = get_gan_dataset(MONET_FILENAMES, PHOTO_FILENAMES, batch_size=args.batch_size)
     return gan_ds, (n_monet_samples, monet_ds), (n_photo_samples, photo_ds)
 

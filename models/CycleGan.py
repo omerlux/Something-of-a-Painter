@@ -2,6 +2,7 @@ import tensorflow as tf
 import tensorflow.keras as keras
 import layers.Discriminator as Discriminator
 import layers.Generator as Generator
+from layers.Augmentations import DiffAugment
 import wandb
 
 
@@ -28,8 +29,7 @@ class Model(keras.Model):
         self.wandb = args.wandb
         self.lambda_cycle = lambda_cycle
 
-    def compile(
-            self,
+    def compile(self,
             m_gen_optimizer,
             p_gen_optimizer,
             m_disc_optimizer,
@@ -37,7 +37,8 @@ class Model(keras.Model):
             gen_loss_fn,
             disc_loss_fn,
             cycle_loss_fn,
-            identity_loss_fn
+            identity_loss_fn,
+            augment
     ):
         super(Model, self).compile()
         self.m_gen_optimizer = m_gen_optimizer
@@ -48,10 +49,11 @@ class Model(keras.Model):
         self.disc_loss_fn = disc_loss_fn
         self.cycle_loss_fn = cycle_loss_fn
         self.identity_loss_fn = identity_loss_fn
+        self.augment = augment
 
     def train_step(self, batch_data):
         real_monet, real_photo = batch_data
-
+        batch_size = tf.shape(real_monet)[0]
         with tf.GradientTape(persistent=True) as tape:
             # photo to monet back to photo
             fake_monet = self.m_gen(real_photo, training=True)
@@ -64,6 +66,13 @@ class Model(keras.Model):
             # generating itself
             same_monet = self.m_gen(real_monet, training=True)
             same_photo = self.p_gen(real_photo, training=True)
+
+            # "Diffaugment": Augmentation is done before the discriminator
+            if len(self.augment) != 0:
+                both_monet = tf.concat([real_monet, fake_monet], axis=0)
+                aug_monet = DiffAugment(both_monet, self.augment)
+                real_monet = aug_monet[:batch_size]     # AUGMENTED!
+                fake_monet = aug_monet[batch_size:]     # AUGMENTED!
 
             # discriminator used to check, inputing real images
             disc_real_monet = self.m_disc(real_monet, training=True)

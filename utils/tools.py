@@ -6,7 +6,7 @@ import torch
 import matplotlib.pyplot as plt
 import pandas as pd
 import PIL
-from data_provider.data_factory import data_augment
+from layers.Augmentations import DiffAugment
 
 plt.switch_backend('agg')
 
@@ -132,7 +132,7 @@ def display_augmented_samples(path, name, ds, num_images=1):
     for j in range(num_images):
         example_sample = next(ds_iter)
         img = example_sample[0] * 0.5 + 0.5
-        x = data_augment(image=img)
+        x = DiffAugment(img[None, :, :, :])[0]
         ax = plt.subplot(2, num_images, j + 1)
         plt.axis('off')
         ax.set_title("origin")

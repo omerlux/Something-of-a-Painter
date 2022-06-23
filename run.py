@@ -1,4 +1,5 @@
 import os
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import sys
 import time
@@ -25,7 +26,8 @@ parser.add_argument('--seed', type=int, default=2021, help='seed number')
 
 # data loader
 parser.add_argument('--data', type=str, default='IGDK', help='dataset type')
-parser.add_argument('--root_path', type=str, default='../../data/Image_Generation_Data_Kaggle/', help='root path of the data file')
+parser.add_argument('--root_path', type=str, default='../../data/Image_Generation_Data_Kaggle/',
+                    help='root path of the data file')
 parser.add_argument('--checkpoints', type=str, default='checkpoints', help='location of model checkpoints')
 parser.add_argument('--augment', nargs="+", type=str, default=[],
                     help='kind of augmentation to apply ["color", "translation", "cutout"]')
@@ -67,6 +69,14 @@ np.random.seed(fix_seed)
 # accessibility to gpus
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = args.devices
+
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+    except RuntimeError as e:
+        print(e)
 
 if args.is_training:
     if args.wandb:

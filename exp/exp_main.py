@@ -64,7 +64,7 @@ class Exp_Main(Exp_Basic):
         display_augmented_samples(path=self.args.save, name="Monet-{}".format(self.args.augment),
                                   ds=monet_ds.batch(1), num_images=4)
         display_augmented_samples(path=self.args.save, name="Photo-{}".format(self.args.augment),
-                                  ds=monet_ds.batch(1), num_images=4)
+                                  ds=photo_ds.batch(1), num_images=4)
 
         self.chkpath = os.path.join(self.args.save, setting, self.args.checkpoints)
         if not os.path.exists(self.chkpath):

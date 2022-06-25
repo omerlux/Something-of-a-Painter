@@ -105,7 +105,7 @@ def create_exp_dir(path, scripts_to_save=None):
     print('Experiment dir : {}'.format(path))
     if scripts_to_save is not None:
         os.mkdir(os.path.join(path, 'images'))
-        os.mkdir(os.path.join(path, 'generated'))
+        os.mkdir(os.path.join(path, 'examples'))
         os.mkdir(os.path.join(path, 'scripts'))
         for script in scripts_to_save:
             dst_file = os.path.join(path, 'scripts', os.path.basename(script))
@@ -120,7 +120,7 @@ def display_samples(path, name, ds, row, col):
         plt.subplot(row, col, j + 1)
         plt.axis('off')
         plt.imshow(example_sample[0] * 0.5 + 0.5)
-    path = os.path.join(path, "images", f"{name}.png")
+    path = os.path.join(path, "examples", f"{name}.png")
     fig.suptitle(f"{name}")
     plt.savefig(path)
     plt.show()
@@ -142,7 +142,7 @@ def display_augmented_samples(path, name, ds, num_images=1):
         plt.axis('off')
         ax.set_title("Augmented")
         ax.imshow(x)
-    path = os.path.join(path, "images", f"{name.split('-')[0]}_Augmented.png")
+    path = os.path.join(path, "examples", f"{name.split('-')[0]}_Augmented.png")
     fig.suptitle(f"{name} Augmentations")
     plt.savefig(path)
     plt.show()
@@ -164,7 +164,7 @@ def display_generated_samples(path, ds, model, n_samples):
         plt.imshow(generated_sample[0] * 0.5 + 0.5)
         plt.axis('off')
 
-        path_tmp = os.path.join(path, "images", "{0:02d}.png".format(n_sample))
+        path_tmp = os.path.join(path, "examples", "{0:02d}.png".format(n_sample))
         plt.savefig(path_tmp)
 
         plt.show()
@@ -176,8 +176,12 @@ def predict_and_save(path, input_ds, generator_model):
         prediction = generator_model(img, training=False)[0].numpy()  # make predition
         prediction = (prediction * 127.5 + 127.5).astype(np.uint8)  # re-scale
         im = PIL.Image.fromarray(prediction)
-        im.save(os.path.join(path, "generated", '{}.jpg'.format(i)))
+        im.save(os.path.join(path, "images", '{}.jpg'.format(i)))
         i += 1
+
+        # # TODO: Delete me
+        # if i == 30:
+        #     break
 
 
 class LogCallback(keras.callbacks.Callback):

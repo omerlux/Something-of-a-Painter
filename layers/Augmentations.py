@@ -79,5 +79,5 @@ def DiffAugment(x, policy=["color", "translation", "cutout"], channels_first=Fal
                 x = f(x)
         if channels_first:
             x = tf.transpose(x, [0, 3, 1, 2])
-    return tf.clip_by_value(x, clip_value_min=-1, clip_value_max=1)      # applying clipping to [-1, 1] values
+    return x # tf.clip_by_value(x, clip_value_min=-1, clip_value_max=1)      # applying clipping to [-1, 1] values
 

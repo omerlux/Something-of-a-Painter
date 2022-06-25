@@ -121,7 +121,7 @@ class Exp_Main(Exp_Basic):
             path=self.args.save,
             ds=photo_ds.batch(1),
             model=self.model.m_gen,
-            n_samples=10
+            n_samples=30
         )
 
         return self.model
@@ -130,14 +130,15 @@ class Exp_Main(Exp_Basic):
         self.chkpath = os.path.join(self.args.save, setting, self.args.checkpoints)
         loaded_model = tf.keras.models.load_model(os.path.join(self.chkpath, "model"))
         # self.model.load_weights(os.path.join(self.chkpath, 'cp.ckpt'))
+        _, _, photo_ds = self._get_data()
 
         predict_and_save(
             path=self.args.save,
-            input_ds=self.photo_ds.batch(1),
+            input_ds=photo_ds.batch(1),
             generator_model=loaded_model.m_gen        # Monet Generator
         )
-        images_path = os.path.join(self.args.save, 'generated')
-        shutil.make_archive(images_path, 'zip')
+        images_path = os.path.join(self.args.save, 'images')
+        shutil.make_archive(images_path, 'zip', self.args.save)
         self.logger.info('| Generated samples: {}'.format(
-            len([name for name in images_path if os.path.isfile(os.path.join(images_path, name))])
+            len([name for name in os.listdir(images_path) if os.path.isfile(os.path.join(images_path, name))])
         ))

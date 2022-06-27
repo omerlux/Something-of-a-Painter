@@ -62,10 +62,14 @@ class Exp_Main(Exp_Basic):
         gan_ds, monet_ds, photo_ds = self._get_data()
         display_samples(path=self.args.save, name="Monet", ds=monet_ds.batch(1), row=4, col=6)
         display_samples(path=self.args.save, name="Photo", ds=photo_ds.batch(1), row=4, col=6)
-        display_augmented_samples(path=self.args.save, name="Monet-{}".format(self.args.augment),
+        display_augmented_samples(path=self.args.save, name="Monet_Diff-{}".format(self.args.diffaugment),
                                   ds=monet_ds.batch(1), num_images=4)
-        display_augmented_samples(path=self.args.save, name="Photo-{}".format(self.args.augment),
+        display_augmented_samples(path=self.args.save, name="Photo_Diff-{}".format(self.args.diffaugment),
                                   ds=photo_ds.batch(1), num_images=4)
+        display_augmented_samples(path=self.args.save, name="Monet_Data-{}".format(self.args.ds_augment),
+                                  ds=monet_ds.batch(1), num_images=4, diffaugment=False)
+        display_augmented_samples(path=self.args.save, name="Photo_Data-{}".format(self.args.ds_augment),
+                                  ds=photo_ds.batch(1), num_images=4, diffaugment=False)
 
         self.chkpath = os.path.join(self.args.save, setting, self.args.checkpoints)
         if not os.path.exists(self.chkpath):
@@ -80,28 +84,28 @@ class Exp_Main(Exp_Basic):
                            disc_loss_fn=discriminator_loss,
                            cycle_loss_fn=calc_cycle_loss,
                            identity_loss_fn=identity_loss,
-                           augment=self.args.augment)
+                           diffaugment=self.args.diffaugment)
 
         self.model.save_weights(os.path.join(self.chkpath, 'cp.ckpt'))
 
         if self.args.wandb:
             self.history = self.model.fit(
                 gan_ds,
-                steps_per_epoch=(self.n_monet // self.args.batch_size),
+                steps_per_epoch=max(self.n_monet, self.n_photo) // 4,
                 epochs=self.args.train_epochs,
                 verbose=1,
                 callbacks=[
                     LogCallback(self.logger, self.args.log_interval),
                     WandbCallback(log_batch_frequency=self.args.log_interval),  # 10
                     keras.callbacks.ModelCheckpoint(filepath=os.path.join(self.chkpath, 'cp.ckpt'),
-                                                    save_weights_only=False,
+                                                    save_weights_only=True,
                                                     verbose=1)
                 ]
             )
         else:
             self.history = self.model.fit(
                 gan_ds,
-                steps_per_epoch=(self.n_monet // self.args.batch_size),
+                steps_per_epoch=max(self.n_monet, self.n_photo) // 4,
                 epochs=self.args.train_epochs,
                 verbose=1,
                 callbacks=[

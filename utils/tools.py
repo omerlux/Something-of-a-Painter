@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import tensorflow.keras as keras
 import matplotlib.pyplot as plt
-from layers.Augmentations import DiffAugment
+from layers.Augmentations import DiffAugment, DataAugment
 
 plt.switch_backend('agg')
 
@@ -126,22 +126,26 @@ def display_samples(path, name, ds, row, col):
     plt.show()
 
 
-def display_augmented_samples(path, name, ds, num_images=1):
+def display_augmented_samples(path, name, ds, num_images=1, diffaugment=True):
     ds_iter = iter(ds)
+    dsaug_layer = DataAugment()
 
     fig = plt.figure(figsize=(5 * num_images, 10))
     for j in range(num_images):
         example_sample = next(ds_iter)
-        img = example_sample[0] * 0.5 + 0.5
-        x = DiffAugment(img[None, :, :, :])[0]
+        img = example_sample * 0.5 + 0.5
+        if diffaugment:
+            x = DiffAugment(img)
+        else:
+            x = dsaug_layer(img)
         ax = plt.subplot(2, num_images, j + 1)
         plt.axis('off')
         ax.set_title("Origin")
-        ax.imshow(img)
+        ax.imshow(img[0])
         ax = plt.subplot(2, num_images, (j + num_images) + 1)
         plt.axis('off')
         ax.set_title("Augmented")
-        ax.imshow(x)
+        ax.imshow(x[0])
     path = os.path.join(path, "examples", f"{name.split('-')[0]}_Augmented.png")
     fig.suptitle(f"{name} Augmentations")
     plt.savefig(path)

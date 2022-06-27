@@ -2,17 +2,19 @@ import tensorflow as tf
 import tensorflow.keras as keras
 import layers.Discriminator as Discriminator
 import layers.Generator as Generator
-from layers.Augmentations import DiffAugment
+from layers.Augmentations import DiffAugment, DataAugment
 import wandb
 
 
 class Model(keras.Model):
-    def __init__(self, args, lambda_cycle=10,):
+    def __init__(self, args, lambda_cycle=10, ):
         super(Model, self).__init__()
         self.height = args.height
         self.width = args.width
         self.channels = args.channels
         self.out_channels = args.out_channels
+        self.ds_augment = args.ds_augment
+        self.dsaug_layer = DataAugment(args.height, args.width, args.channels)
         if args.model == 'ResCycleGan':
             self.transformer_blocks = args.transformer_blocks
             self.m_gen = Generator.res_generator_fn(args.height, args.width, args.channels, args.out_channels,
@@ -31,16 +33,16 @@ class Model(keras.Model):
         self.build((None,) + (self.height, self.width, self.channels))
 
     def compile(self,
-            m_gen_optimizer,
-            p_gen_optimizer,
-            m_disc_optimizer,
-            p_disc_optimizer,
-            gen_loss_fn,
-            disc_loss_fn,
-            cycle_loss_fn,
-            identity_loss_fn,
-            augment
-    ):
+                m_gen_optimizer,
+                p_gen_optimizer,
+                m_disc_optimizer,
+                p_disc_optimizer,
+                gen_loss_fn,
+                disc_loss_fn,
+                cycle_loss_fn,
+                identity_loss_fn,
+                diffaugment
+                ):
         super(Model, self).compile()
         self.m_gen_optimizer = m_gen_optimizer
         self.p_gen_optimizer = p_gen_optimizer
@@ -50,13 +52,18 @@ class Model(keras.Model):
         self.disc_loss_fn = disc_loss_fn
         self.cycle_loss_fn = cycle_loss_fn
         self.identity_loss_fn = identity_loss_fn
-        self.augment = augment
+        self.diffaugment = diffaugment
 
     def call(self, input, training=False):
         return self.m_gen(input, training=training)
 
     def train_step(self, batch_data):
         real_monet, real_photo = batch_data
+        # dataset augmentation layer
+        if self.ds_augment:
+            real_monet = self.dsaug_layer(real_monet)
+            real_photo = self.dsaug_layer(real_photo)
+
         batch_size = tf.shape(real_monet)[0]
         with tf.GradientTape(persistent=True) as tape:
             # photo to monet back to photo
@@ -72,11 +79,11 @@ class Model(keras.Model):
             same_photo = self.p_gen(real_photo, training=True)
 
             # "Diffaugment": Augmentation is done before the discriminator
-            if len(self.augment) != 0:
+            if len(self.diffaugment) != 0:
                 both_monet = tf.concat([real_monet, fake_monet], axis=0)
-                aug_monet = DiffAugment(both_monet, self.augment)
-                real_monet = aug_monet[:batch_size]     # AUGMENTED!
-                fake_monet = aug_monet[batch_size:]     # AUGMENTED!
+                aug_monet = DiffAugment(both_monet, self.diffaugment)
+                real_monet = aug_monet[:batch_size]  # AUGMENTED!
+                fake_monet = aug_monet[batch_size:]  # AUGMENTED!
 
             # discriminator used to check, inputing real images
             disc_real_monet = self.m_disc(real_monet, training=True)

@@ -1,17 +1,18 @@
 import tensorflow as tf
 import tensorflow.keras.layers as L
-import tensorflow_addons as tfa
-
+from tensorflow.keras import Model
 
 # Augmentations functions
 def rand_brightness(x):
-    magnitude = tf.random.uniform([tf.shape(x)[0], 1, 1, 1]) - 0.5
+    factor = 1  # 1    # between (-factor/2, factor/2) around 0
+    magnitude = tf.random.uniform([tf.shape(x)[0], 1, 1, 1]) * factor - factor / 2          # - 0.5
     x = x + magnitude
     return x
 
 
 def rand_saturation(x):
-    magnitude = tf.random.uniform([tf.shape(x)[0], 1, 1, 1]) * 2
+    factor = 2  # 2    # between (1 - factor/2, 1 + factor/2) - around 1
+    magnitude = tf.random.uniform([tf.shape(x)[0], 1, 1, 1]) * factor + (1 - factor / 2)    # * 2
     x_mean = tf.reduce_sum(x, axis=3, keepdims=True) * 0.3333333333333333333
     x = (x - x_mean) * magnitude + x_mean
     return x
@@ -79,5 +80,42 @@ def DiffAugment(x, policy=["color", "translation", "cutout"], channels_first=Fal
                 x = f(x)
         if channels_first:
             x = tf.transpose(x, [0, 3, 1, 2])
-    return x # tf.clip_by_value(x, clip_value_min=-1, clip_value_max=1)      # applying clipping to [-1, 1] values
+    return x    # tf.clip_by_value(x, clip_value_min=-1, clip_value_max=1)      # applying clipping to [-1, 1] values
 
+
+def DataAugment(hieght=256, width=256, channels=3):
+    inputs = L.Input(shape=[hieght, width, channels])
+
+    flip = tf.keras.layers.experimental.preprocessing.RandomFlip()
+    rotate = tf.keras.layers.experimental.preprocessing.RandomRotation(factor=(-.25, 0.25), fill_mode='reflect')
+
+    outputs = flip(inputs)
+    outputs = rotate(outputs)
+
+    return Model(inputs=inputs, outputs=outputs)
+
+
+
+    # bs, HEIGHT, WIDTH, CHANNELS = image.shape
+    # p_spatial = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+    # p_rotate = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+    # #     p_crop = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+    #
+    # # 90º rotations
+    # if p_rotate > .8:
+    #     image = tf.image.rot90(image, k=3)  # rotate 270º
+    # elif p_rotate > .6:
+    #     image = tf.image.rot90(image, k=2)  # rotate 180º
+    # elif p_rotate > .4:
+    #     image = tf.image.rot90(image, k=1)  # rotate 90º
+    #
+    # # Flips
+    # image = tf.image.random_flip_left_right(image)
+    # image = tf.image.random_flip_up_down(image)
+    # if p_spatial > .75:
+    #     image = tf.image.transpose(image)
+    #
+    # # Train on crops
+    # # image = tf.image.random_crop(image, size=[bs, HEIGHT, WIDTH, CHANNELS])
+
+    return image

@@ -13,7 +13,7 @@ from exp.exp_main import Exp_Main
 from utils.tools import create_exp_dir
 import wandb
 
-parser = argparse.ArgumentParser(description='Autoformer & Transformer family for Time Series Forecasting')
+parser = argparse.ArgumentParser(description='GANs for Monet photos generator')
 
 # basic config
 parser.add_argument('--is_training', type=int, default=1, help='status')
@@ -29,8 +29,10 @@ parser.add_argument('--data', type=str, default='IGDK', help='dataset type')
 parser.add_argument('--root_path', type=str, default='../../data/Image_Generation_Data_Kaggle/',
                     help='root path of the data file')
 parser.add_argument('--checkpoints', type=str, default='checkpoints', help='location of model checkpoints')
-parser.add_argument('--augment', nargs="+", type=str, default=[],
-                    help='kind of augmentation to apply ["color", "translation", "cutout"]')
+parser.add_argument('--ds_augment', action='store_true',
+                    help='pre-augmentation to the datasets')
+parser.add_argument('--diffaugment', nargs="+", type=str, default=[],
+                    help='kind of DiffAugmentation to apply ["color", "translation", "cutout"]')
 
 # model and task parameters task
 parser.add_argument('--height', type=int, default=256)

@@ -47,6 +47,7 @@ parser.add_argument('--num_workers', type=int, default=10, help='data loader num
 parser.add_argument('--itr', type=int, default=1, help='experiments times')
 parser.add_argument('--log_interval', type=int, default=20, help='training log print interval')
 parser.add_argument('--train_epochs', type=int, default=50, help='train epochs')
+parser.add_argument('--steps_per_epoch', type=int, default=-1, help="steps per epoch, -1 is max(monet_ds, photo_ds)/4")
 parser.add_argument('--batch_size', type=int, default=1, help='batch size of train input data')
 parser.add_argument('--learning_rate', type=float, default=2e-4, help='optimizer learning rate')
 parser.add_argument('--lradj', type=str, default='type1', help='adjust learning rate')
@@ -74,9 +75,15 @@ os.environ["CUDA_VISIBLE_DEVICES"] = args.devices
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
+    # tf.config.run_functions_eagerly(False)  # or True
     try:
         for gpu in gpus:
-            tf.config.experimental.set_memory_growth(gpu, True)
+            config = tf.compat.v1.ConfigProto()
+            config.gpu_options.allow_growth = False
+            config.gpu_options.per_process_gpu_memory_fraction = 0.95
+            session = tf.compat.v1.Session(config=config)
+            tf.compat.v1.keras.backend.set_session(session)
+            # tf.config.experimental.set_memory_growth(gpu, True)
     except RuntimeError as e:
         print(e)
 
@@ -105,7 +112,10 @@ if args.is_training:
         model_script = 'models/CycleGan.py'
 
     main_script = 'exp/exp_main.py'
-    create_exp_dir(args.save, scripts_to_save=[model_script, main_script])
+    if os.path.isdir(os.path.join('saves', args.save)):
+        args.save = os.path.join('saves', args.save)
+    else:
+        create_exp_dir(args.save, scripts_to_save=[model_script, main_script])
 
 else:
     args.save = os.path.join('saves', args.save)

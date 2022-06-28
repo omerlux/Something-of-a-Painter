@@ -1,11 +1,15 @@
 import os
+import gc
 import PIL
 import torch
 import shutil
+import resource
 import datetime
 import numpy as np
 import pandas as pd
-import tensorflow.keras as keras
+import tensorflow as tf
+from tensorflow.keras import backend
+from tensorflow.keras.callbacks import Callback
 import matplotlib.pyplot as plt
 from layers.Augmentations import DiffAugment, DataAugment
 
@@ -188,7 +192,7 @@ def predict_and_save(path, input_ds, generator_model):
         #     break
 
 
-class LogCallback(keras.callbacks.Callback):
+class LogCallback(Callback):
     def __init__(self, logger, log_interval):
         self.logger = logger
         self.log_interval = log_interval
@@ -215,3 +219,14 @@ class LogCallback(keras.callbacks.Callback):
                                                                          logs["photo_disc_loss"],
                                                                          logs["total_cycle_loss"])
         )
+
+
+class ClearMemory(Callback):
+    def __init__(self, logger):
+        self.logger = logger
+
+    def on_epoch_end(self, epoch, logs=None):
+        backend.clear_session()
+        gc.collect()
+        tf.compat.v1.reset_default_graph()
+        self.logger.info(" | Resource Report: {}".format(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))

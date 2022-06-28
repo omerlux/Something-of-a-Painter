@@ -33,7 +33,7 @@ class Exp_Basic(object):
     def vali(self):
         pass
 
-    def train(self):
+    def train(self, settings):
         pass
 
     def test(self):

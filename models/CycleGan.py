@@ -135,11 +135,10 @@ class Model(keras.Model):
         self.p_disc_optimizer.apply_gradients(zip(photo_discriminator_gradients,
                                                   self.p_disc.trainable_variables))
 
-        losses = {
+        return {
             'monet_gen_loss': total_monet_gen_loss,
             'photo_gen_loss': total_photo_gen_loss,
             'monet_disc_loss': monet_disc_loss,
             'photo_disc_loss': photo_disc_loss,
             'total_cycle_loss': total_cycle_loss
         }
-        return losses

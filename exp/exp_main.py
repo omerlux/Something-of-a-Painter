@@ -12,9 +12,10 @@ from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from models import CycleGan
 from utils.tools import EarlyStopping, adjust_learning_rate, visual
-from utils.metrics import discriminator_loss, generator_loss, calc_cycle_loss, identity_loss
+from utils.metrics import discriminator_loss, generator_loss, calc_cycle_loss, identity_loss, \
+    load_inception_model, MiFID, calculate_activation_statistics_mod
 from utils.tools import display_samples, display_augmented_samples, display_generated_samples, predict_and_save, \
-    LogCallback
+    LogCallback, ClearMemory
 
 warnings.filterwarnings('ignore')
 
@@ -43,6 +44,8 @@ class Exp_Main(Exp_Basic):
         self.gan_ds = gan_ds
         self.monet_ds = monet_ds
         self.photo_ds = photo_ds
+        self.steps_per_epoch = max(self.n_monet, self.n_photo) // 4 if self.args.steps_per_epoch == -1 \
+                                   else self.args.steps_per_epoch
         return gan_ds, monet_ds, photo_ds
 
     def _select_optimizer(self):
@@ -71,6 +74,10 @@ class Exp_Main(Exp_Basic):
         display_augmented_samples(path=self.args.save, name="Photo_Data-{}".format(self.args.ds_augment),
                                   ds=photo_ds.batch(1), num_images=4, diffaugment=False)
 
+        chkpnt_exists = [f for f in os.listdir(self.args.save) if
+                   not (('log' in f) and ('scripts' in f) and ('images' in f) and ('examples' in f))]
+        if len(chkpnt_exists) != 0:
+            setting = chkpnt_exists[0]
         self.chkpath = os.path.join(self.args.save, setting, self.args.checkpoints)
         if not os.path.exists(self.chkpath):
             os.makedirs(self.chkpath)
@@ -86,45 +93,50 @@ class Exp_Main(Exp_Basic):
                            identity_loss_fn=identity_loss,
                            diffaugment=self.args.diffaugment)
 
-        self.model.save_weights(os.path.join(self.chkpath, 'cp.ckpt'))
+        if len(chkpnt_exists) != 0:
+            self.model.load_weights(os.path.join(self.chkpath, 'cp.ckpt'))
+        else:
+            self.model.save_weights(os.path.join(self.chkpath, 'cp.ckpt'))
+
+        callbacks = [LogCallback(self.logger, self.args.log_interval),
+                     ClearMemory(self.logger),
+                     keras.callbacks.ModelCheckpoint(filepath=os.path.join(self.chkpath, 'cp.ckpt'),
+                                                     save_weights_only=True,
+                                                     verbose=1)]
 
         if self.args.wandb:
-            self.history = self.model.fit(
-                gan_ds,
-                steps_per_epoch=max(self.n_monet, self.n_photo) // 4,
-                epochs=self.args.train_epochs,
-                verbose=1,
-                callbacks=[
-                    LogCallback(self.logger, self.args.log_interval),
-                    WandbCallback(log_batch_frequency=self.args.log_interval),  # 10
-                    keras.callbacks.ModelCheckpoint(filepath=os.path.join(self.chkpath, 'cp.ckpt'),
-                                                    save_weights_only=True,
-                                                    verbose=1)
-                ]
-            )
-        else:
-            self.history = self.model.fit(
-                gan_ds,
-                steps_per_epoch=max(self.n_monet, self.n_photo) // 4,
-                epochs=self.args.train_epochs,
-                verbose=1,
-                callbacks=[
-                    LogCallback(self.logger, self.args.log_interval),
-                    keras.callbacks.ModelCheckpoint(filepath=os.path.join(self.chkpath, 'cp.ckpt'),
-                                                    save_weights_only=True,
-                                                    verbose=1)
-                ]
-            )
+            callbacks.append(WandbCallback(log_batch_frequency=self.args.log_interval))  # 10
+
+        self.history = self.model.fit(
+            gan_ds,
+            steps_per_epoch=self.steps_per_epoch,
+            epochs=self.args.train_epochs,
+            verbose=1,
+            callbacks=callbacks
+        )
 
         # Save the whole model
         self.model.compute_output_shape(input_shape=(None, self.args.height, self.args.width, self.args.channels))
-        keras.Model.save(self.model, os.path.join(self.chkpath, "model"), save_format='tf')
+        self.monet_generator = self.model.m_gen
+        keras.Model.save(self.monet_generator, os.path.join(self.chkpath, "model_m_gen"), save_format='tf')
         # tf.saved_model.save(self.model, os.path.join(self.chkpath, "model"))
+
+        # calculate the FID / MiFID scores:
+        inception_model = load_inception_model()
+        FID_mu2, FID_sigma2, FID_features2 = calculate_activation_statistics_mod(monet_ds.batch(self.args.batch_size),
+                                                                                 inception_model)
+        MiFID_score = MiFID(images=photo_ds.batch(self.args.batch_size), gen_model=self.monet_generator,
+                            inception_model=inception_model, mu2=FID_mu2, sigma2=FID_sigma2, features2=FID_features2)
+        self.logger.info("=" * 80)
+        self.logger.info("| MiFID Score: {:3.5f}".format(MiFID_score))
+        self.logger.info("=" * 80)
+        if self.args.wandb:
+            wandb.log({"MiFID":  MiFID_score})
 
         display_generated_samples(
             path=self.args.save,
             ds=photo_ds.batch(1),
-            model=self.model.m_gen,
+            model=self.monet_generator,
             n_samples=30
         )
 
@@ -132,14 +144,14 @@ class Exp_Main(Exp_Basic):
 
     def predict(self, setting):
         self.chkpath = os.path.join(self.args.save, setting, self.args.checkpoints)
-        loaded_model = tf.keras.models.load_model(os.path.join(self.chkpath, "model"))
+        loaded_model = tf.keras.models.load_model(os.path.join(self.chkpath, "model_m_gen"))
         # self.model.load_weights(os.path.join(self.chkpath, 'cp.ckpt'))
         _, _, photo_ds = self._get_data()
 
         predict_and_save(
             path=self.args.save,
             input_ds=photo_ds.batch(1),
-            generator_model=loaded_model.m_gen        # Monet Generator
+            generator_model=loaded_model  # Monet Generator
         )
         images_path = os.path.join(self.args.save, 'images')
         shutil.make_archive(images_path, 'zip', self.args.save)

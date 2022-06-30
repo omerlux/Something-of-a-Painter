@@ -40,6 +40,7 @@ parser.add_argument('--width', type=int, default=256)
 parser.add_argument('--channels', type=int, default=3)
 parser.add_argument('--out_channels', type=int, default=3)
 parser.add_argument('--transformer_blocks', type=int, default=6)
+parser.add_argument('--cycle_noise', type=float, default=0, help='cycle std noise added to generated image. 0 is none')
 parser.add_argument('--do_predict', action='store_true', help='whether to predict unseen future data')
 
 # optimization

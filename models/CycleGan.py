@@ -14,6 +14,7 @@ class Model(keras.Model):
         self.channels = args.channels
         self.out_channels = args.out_channels
         self.ds_augment = args.ds_augment
+        self.cycle_noise = args.cycle_noise     # represents the std of the noise - 0 for none
         self.dsaug_layer = DataAugment(args.height, args.width, args.channels)
         if args.model == 'ResCycleGan':
             self.transformer_blocks = args.transformer_blocks
@@ -68,10 +69,14 @@ class Model(keras.Model):
         with tf.GradientTape(persistent=True) as tape:
             # photo to monet back to photo
             fake_monet = self.m_gen(real_photo, training=True)
+            if self.cycle_noise:
+                fake_monet += tf.random.normal(tf.shape(fake_monet), mean=0, stddev=self.cycle_noise)
             cycled_photo = self.p_gen(fake_monet, training=True)
 
             # monet to photo back to monet
             fake_photo = self.p_gen(real_monet, training=True)
+            if self.cycle_noise:
+                fake_photo += tf.random.normal(tf.shape(fake_photo), mean=0, stddev=self.cycle_noise)
             cycled_monet = self.m_gen(fake_photo, training=True)
 
             # generating itself

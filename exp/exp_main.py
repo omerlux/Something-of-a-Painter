@@ -75,7 +75,7 @@ class Exp_Main(Exp_Basic):
                                   ds=photo_ds.batch(1), num_images=4, diffaugment=False)
 
         chkpnt_exists = [f for f in os.listdir(self.args.save) if
-                   not (('log' in f) and ('scripts' in f) and ('images' in f) and ('examples' in f))]
+                         not (('log' in f) or ('scripts' in f) or ('images' in f) or ('examples' in f))]
         if len(chkpnt_exists) != 0:
             setting = chkpnt_exists[0]
         self.chkpath = os.path.join(self.args.save, setting, self.args.checkpoints)

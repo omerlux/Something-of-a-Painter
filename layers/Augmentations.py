@@ -93,29 +93,3 @@ def DataAugment(hieght=256, width=256, channels=3):
     outputs = rotate(outputs)
 
     return Model(inputs=inputs, outputs=outputs)
-
-
-
-    # bs, HEIGHT, WIDTH, CHANNELS = image.shape
-    # p_spatial = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
-    # p_rotate = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
-    # #     p_crop = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
-    #
-    # # 90º rotations
-    # if p_rotate > .8:
-    #     image = tf.image.rot90(image, k=3)  # rotate 270º
-    # elif p_rotate > .6:
-    #     image = tf.image.rot90(image, k=2)  # rotate 180º
-    # elif p_rotate > .4:
-    #     image = tf.image.rot90(image, k=1)  # rotate 90º
-    #
-    # # Flips
-    # image = tf.image.random_flip_left_right(image)
-    # image = tf.image.random_flip_up_down(image)
-    # if p_spatial > .75:
-    #     image = tf.image.transpose(image)
-    #
-    # # Train on crops
-    # # image = tf.image.random_crop(image, size=[bs, HEIGHT, WIDTH, CHANNELS])
-
-    return image

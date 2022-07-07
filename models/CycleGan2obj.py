@@ -16,20 +16,14 @@ class Model(keras.Model):
         self.ds_augment = args.ds_augment
         self.cycle_noise = args.cycle_noise     # represents the std of the noise - 0 for none
         self.dsaug_layer = DataAugment(args.height, args.width, args.channels)
-        if args.model == 'ResCycleGan':
-            self.transformer_blocks = args.transformer_blocks
-            self.m_gen = Generator.res_generator_fn(args.height, args.width, args.channels, args.out_channels,
-                                                    args.transformer_blocks)
-            self.p_gen = Generator.res_generator_fn(args.height, args.width, args.channels, args.out_channels,
-                                                    args.transformer_blocks)
-            self.m_disc = Discriminator.res_discriminator_fn(args.height, args.width, args.channels)
-            self.p_disc = Discriminator.res_discriminator_fn(args.height, args.width, args.channels)
-        else:
-            self.m_gen = Generator.generator_fn(args.height, args.width, args.channels, args.out_channels)
-            self.p_gen = Generator.generator_fn(args.height, args.width, args.channels, args.out_channels)
-            self.m_disc = Discriminator.discriminator_fn(args.height, args.width, args.channels)
-            self.p_disc = Discriminator.discriminator_fn(args.height, args.width, args.channels)
+        self.m_gen = Generator.generator_fn(args.height, args.width, args.channels, args.out_channels)
+        self.p_gen = Generator.generator_fn(args.height, args.width, args.channels, args.out_channels)
+        self.m_disc = Discriminator.discriminator_fn_prehead(args.height, args.width, args.channels)
+        self.p_disc = Discriminator.discriminator_fn(args.height, args.width, args.channels)
+        self.dhead1 = Discriminator.discriminator_head()        # Head for BCE
+        self.dhead2 = Discriminator.discriminator_head()        # Head for Hinge Loss
         self.wandb = args.wandb
+        self.two_objectives = args.two_objectives
         self.lambda_cycle = lambda_cycle
         self.build((None,) + (self.height, self.width, self.channels))
 
@@ -38,8 +32,10 @@ class Model(keras.Model):
                 p_gen_optimizer,
                 m_disc_optimizer,
                 p_disc_optimizer,
-                gen_loss_fn,
-                disc_loss_fn,
+                gen_loss_fn1,
+                gen_loss_fn2,
+                disc_loss_fn1,
+                disc_loss_fn2,
                 cycle_loss_fn,
                 identity_loss_fn,
                 diffaugment
@@ -49,8 +45,10 @@ class Model(keras.Model):
         self.p_gen_optimizer = p_gen_optimizer
         self.m_disc_optimizer = m_disc_optimizer
         self.p_disc_optimizer = p_disc_optimizer
-        self.gen_loss_fn = gen_loss_fn
-        self.disc_loss_fn = disc_loss_fn
+        self.gen_loss_fn1 = gen_loss_fn1
+        self.gen_loss_fn2 = gen_loss_fn2
+        self.disc_loss_fn1 = disc_loss_fn1
+        self.disc_loss_fn2 = disc_loss_fn2
         self.cycle_loss_fn = cycle_loss_fn
         self.identity_loss_fn = identity_loss_fn
         self.diffaugment = diffaugment
@@ -90,14 +88,31 @@ class Model(keras.Model):
                 real_monet = aug_monet[:batch_size]  # AUGMENTED!
                 fake_monet = aug_monet[batch_size:]  # AUGMENTED!
 
+            # ------------------------------------------------------------------------------------
+            # HEAD 1:
             # discriminator used to check, inputing real images
-            disc_real_monet = self.m_disc(real_monet, training=True)
+            disc_real_monet1 = self.dhead1(self.m_disc(real_monet, training=True), training=True)
             # discriminator used to check, inputing fake images
-            disc_fake_monet = self.m_disc(fake_monet, training=True)
+            disc_fake_monet1 = self.dhead1(self.m_disc(fake_monet, training=True), training=True)
             # evaluates generator loss
-            monet_gen_loss = self.gen_loss_fn(disc_fake_monet)
+            monet_gen_loss1 = self.gen_loss_fn1(disc_fake_monet1)
             # evaluates discriminator loss
-            monet_disc_loss = self.disc_loss_fn(disc_real_monet, disc_fake_monet)
+            monet_disc_loss_head1 = self.disc_loss_fn1(disc_real_monet1, disc_fake_monet1)
+
+            # HEAD 2:
+            # discriminator used to check, inputing real images
+            disc_real_monet2 = self.dhead2(self.m_disc(real_monet, training=True), training=True)
+            # discriminator used to check, inputing fake images
+            disc_fake_monet2 = self.dhead2(self.m_disc(fake_monet, training=True), training=True)
+            # evaluates generator loss
+            monet_gen_loss2 = self.gen_loss_fn1(disc_fake_monet2)
+            # evaluates discriminator loss
+            monet_disc_loss_head2 = self.disc_loss_fn1(disc_real_monet2, disc_fake_monet2)
+
+            # adding head1 and head2 results:
+            monet_gen_loss = (monet_gen_loss1 + monet_gen_loss2) * 0.4
+            monet_disc_loss = monet_disc_loss_head1 + monet_disc_loss_head2
+            # ------------------------------------------------------------------------------------
 
             # discriminator used to check, inputing real images
             disc_real_photo = self.p_disc(real_photo, training=True)
@@ -147,5 +162,11 @@ class Model(keras.Model):
             'photo_gen_loss': total_photo_gen_loss,
             'monet_disc_loss': monet_disc_loss,
             'photo_disc_loss': photo_disc_loss,
-            'total_cycle_loss': total_cycle_loss
+            'total_cycle_loss': total_cycle_loss,
+            "monet_disc_loss_head1": monet_disc_loss_head1,
+            "monet_disc_loss_head2": monet_disc_loss_head2,
+            "disc_real_monet1": disc_real_monet1,
+            "disc_fake_monet1": disc_fake_monet1,
+            "disc_real_monet2": disc_real_monet2,
+            "disc_fake_monet2": disc_fake_monet2,
         }

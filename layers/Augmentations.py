@@ -83,13 +83,16 @@ def DiffAugment(x, policy=["color", "translation", "cutout"], channels_first=Fal
     return x    # tf.clip_by_value(x, clip_value_min=-1, clip_value_max=1)      # applying clipping to [-1, 1] values
 
 
-def DataAugment(hieght=256, width=256, channels=3):
-    inputs = L.Input(shape=[hieght, width, channels])
+def DataAugment(height=256, width=256, channels=3):
+    inputs = L.Input(shape=[height, width, channels])
 
-    flip = tf.keras.layers.experimental.preprocessing.RandomFlip()
+    flip = tf.keras.layers.experimental.preprocessing.RandomFlip('horizontal')
     rotate = tf.keras.layers.experimental.preprocessing.RandomRotation(factor=(-.25, 0.25), fill_mode='reflect')
+    crop = tf.keras.layers.experimental.preprocessing.RandomCrop(int(height / 1.5), int(width / 1.5))
+    resize = tf.keras.layers.experimental.preprocessing.Resizing(height, width)
 
     outputs = flip(inputs)
     outputs = rotate(outputs)
-
+    outputs = crop(outputs)
+    outputs = resize(outputs)
     return Model(inputs=inputs, outputs=outputs)

@@ -10,10 +10,10 @@ from wandb.keras import WandbCallback
 
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
-from models import CycleGan
+from models import CycleGan, CycleGan2obj
 from utils.tools import EarlyStopping, adjust_learning_rate, visual
-from utils.metrics import discriminator_loss, generator_loss, calc_cycle_loss, identity_loss, \
-    load_inception_model, MiFID, calculate_activation_statistics_mod
+from utils.metrics import discriminator_loss, discriminator_loss_hinge, generator_loss, generator_loss_minus, \
+    calc_cycle_loss, identity_loss, load_inception_model, MiFID, calculate_activation_statistics_mod
 from utils.tools import display_samples, display_augmented_samples, display_generated_samples, predict_and_save, \
     LogCallback, ClearMemory
 
@@ -27,7 +27,8 @@ class Exp_Main(Exp_Basic):
     def _build_model(self):
         model_dict = {
             'CycleGan': CycleGan,
-            'ResCycleGan': CycleGan
+            'ResCycleGan': CycleGan,
+            'CycleGan2obj': CycleGan2obj,
         }
 
         model = model_dict[self.args.model].Model(self.args)
@@ -83,15 +84,28 @@ class Exp_Main(Exp_Basic):
             os.makedirs(self.chkpath)
 
         monet_gn_opt, photo_gn_opt, monet_ds_opt, photo_ds_opt = self._select_optimizer()
-        self.model.compile(m_gen_optimizer=monet_gn_opt,
-                           p_gen_optimizer=photo_gn_opt,
-                           m_disc_optimizer=monet_ds_opt,
-                           p_disc_optimizer=photo_ds_opt,
-                           gen_loss_fn=generator_loss,
-                           disc_loss_fn=discriminator_loss,
-                           cycle_loss_fn=calc_cycle_loss,
-                           identity_loss_fn=identity_loss,
-                           diffaugment=self.args.diffaugment)
+        if '2obj' in self.args.model:
+            self.model.compile(m_gen_optimizer=monet_gn_opt,
+                               p_gen_optimizer=photo_gn_opt,
+                               m_disc_optimizer=monet_ds_opt,
+                               p_disc_optimizer=photo_ds_opt,
+                               gen_loss_fn1=generator_loss_minus,           # Another loss - (-gen)
+                               gen_loss_fn2=generator_loss,
+                               disc_loss_fn1=discriminator_loss,
+                               disc_loss_fn2=discriminator_loss_hinge,      # Another loss - hinge
+                               cycle_loss_fn=calc_cycle_loss,
+                               identity_loss_fn=identity_loss,
+                               diffaugment=self.args.diffaugment)
+        else:
+            self.model.compile(m_gen_optimizer=monet_gn_opt,
+                               p_gen_optimizer=photo_gn_opt,
+                               m_disc_optimizer=monet_ds_opt,
+                               p_disc_optimizer=photo_ds_opt,
+                               gen_loss_fn=generator_loss,
+                               disc_loss_fn=discriminator_loss,
+                               cycle_loss_fn=calc_cycle_loss,
+                               identity_loss_fn=identity_loss,
+                               diffaugment=self.args.diffaugment)
 
         if len(chkpnt_exists) != 0:
             self.model.load_weights(os.path.join(self.chkpath, 'cp.ckpt'))

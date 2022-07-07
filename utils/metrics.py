@@ -3,6 +3,7 @@ import tensorflow as tf
 import numpy as np
 
 
+# Discriminator loss:
 def discriminator_loss(real, generated):
     real_loss = losses.BinaryCrossentropy(from_logits=True, reduction=losses.Reduction.AUTO)(tf.ones_like(real), real)
 
@@ -14,8 +15,22 @@ def discriminator_loss(real, generated):
     return total_disc_loss * 0.5
 
 
+def discriminator_loss_hinge(real, generated):
+    real_loss = tf.math.minimum(tf.zeros_like(real), real - tf.ones_like(real))
+
+    generated_loss = tf.math.minimum(tf.zeros_like(generated), -generated - tf.ones_like(generated))
+
+    total_disc_loss = real_loss + generated_loss
+
+    return tf.reduce_mean(-total_disc_loss * 0.5)
+
+
 # Generator loss
 def generator_loss(generated):
+    return losses.BinaryCrossentropy(from_logits=True, reduction=losses.Reduction.AUTO)(tf.ones_like(generated),
+                                                                                        generated)
+
+def generator_loss_minus(generated):
     return losses.BinaryCrossentropy(from_logits=True, reduction=losses.Reduction.AUTO)(tf.ones_like(generated),
                                                                                         generated)
 

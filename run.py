@@ -57,7 +57,6 @@ parser.add_argument('--optimizer', type=str, default='adam', help='optimizer nam
 
 # GPU
 parser.add_argument('--use_gpu', action='store_false', help='use gpu - if mentioned in args, no gpu')
-parser.add_argument('--use_multi_gpu', action='store_true', help='use multiple gpus', default=False)
 parser.add_argument('--devices', type=str, default="0", help='device ids of multile gpus')
 
 args = parser.parse_args()

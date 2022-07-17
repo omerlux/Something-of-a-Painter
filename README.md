@@ -23,10 +23,10 @@ Your task is to build a GAN that generates 7,000 to 10,000 Monet-style images.
 
 ## Implementations:
  
-We used the Cycle-GAN [[2](https://openaccess.thecvf.com/content_ICCV_2017/papers/Zhu_Unpaired_Image-To-Image_Translation_ICCV_2017_paper.pdf)], [[3](https://openaccess.thecvf.com/content_cvpr_2017/papers/Isola_Image-To-Image_Translation_With_CVPR_2017_paper.pdf)] architecture in order to address this problem. More information on the [report](https://github.com/omerlux/Something-of-a-Painter/report.pdf).
+We used the Cycle-GAN [[2](https://openaccess.thecvf.com/content_ICCV_2017/papers/Zhu_Unpaired_Image-To-Image_Translation_ICCV_2017_paper.pdf)], [[3](https://openaccess.thecvf.com/content_cvpr_2017/papers/Isola_Image-To-Image_Translation_With_CVPR_2017_paper.pdf)] architecture in order to address this problem. More information on the [report](https://github.com/omerlux/Something-of-a-Painter/blob/master/report.pdf).
 
 <p align="center">
-  <img src="https://github.com/omerlux/Something-of-a-Painter/pic/cyclegan.png" alt="Cycle-GAN Example Architecture"/>
+  <img src="https://github.com/omerlux/Something-of-a-Painter/blob/master/pic/cyclegan.png" alt="Cycle-GAN Example Architecture"/>
 </p>
 
 ### Improvements that did better:

@@ -3,6 +3,8 @@
 
 _By Orel Ben-Zaken and Omer Lux_
 
+![I'm Something of a Painter Myself](https://i.imgflip.com/6n1ag8.jpg)
+
 
 We recognize the works of artists through their unique style, such as color choices or brush strokes. The “je ne sais quoi” of artists like Claude Monet can now be imitated with algorithms thanks to generative adversarial networks (GANs). In this getting started competition, you will bring that style to your photos or recreate the style from scratch!
 

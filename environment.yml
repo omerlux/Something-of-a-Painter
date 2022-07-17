@@ -4,11 +4,14 @@ channels:
   - pytorch
   - defaults
 dependencies:
-  - python=3.7
+  - python=3.6.9
   - pip
   - matplotlib
   - numpy
   - pandas
   - scikit-learn
+  - wandb
   - pip:
-    - torch==1.9.0
+    - torch==1.10.1
+    - tensorflow==2.3.0
+    - tensorflow_addons==0.14.0

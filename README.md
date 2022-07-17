@@ -1,7 +1,8 @@
-https://www.kaggle.com/competitions/gan-getting-started/overview
+# I'm Something of a Painter Myself
+[Kaggle Competition Link](https://www.kaggle.com/competitions/gan-getting-started/overview)
 
-# I'm Something of a Painter Myself - 
-### Orel Ben-Zaken and Omer Lux
+
+#### By Orel Ben-Zaken and Omer Lux
 
 We recognize the works of artists through their unique style, such as color choices or brush strokes. The “je ne sais quoi” of artists like Claude Monet can now be imitated with algorithms thanks to generative adversarial networks (GANs). In this getting started competition, you will bring that style to your photos or recreate the style from scratch!
 
@@ -19,8 +20,8 @@ Your task is to build a GAN that generates 7,000 to 10,000 Monet-style images.
 
 ## Implementations:
 
-We used the Cycle-GAN [[2](https://openaccess.thecvf.com/content_ICCV_2017/papers/Zhu_Unpaired_Image-To-Image_Translation_ICCV_2017_paper.pdf)], [[3](https://openaccess.thecvf.com/content_cvpr_2017/papers/Isola_Image-To-Image_Translation_With_CVPR_2017_paper.pdf)] architecture in order to address this problem. More information on the [report](./report.pdf).
-![Cycle-GAN Example Architecture](./pic/cyclegan.png)
+We used the Cycle-GAN [[2](https://openaccess.thecvf.com/content_ICCV_2017/papers/Zhu_Unpaired_Image-To-Image_Translation_ICCV_2017_paper.pdf)], [[3](https://openaccess.thecvf.com/content_cvpr_2017/papers/Isola_Image-To-Image_Translation_With_CVPR_2017_paper.pdf)] architecture in order to address this problem. More information on the [report](https://github.com/omerlux/Something-of-a-Painter/report.pdf).
+![Cycle-GAN Example Architecture](https://github.com/omerlux/Something-of-a-Painter/pic/cyclegan.png)
 
 ### Improvements that did better:
 

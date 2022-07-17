@@ -23,7 +23,6 @@ class Model(keras.Model):
         self.dhead1 = Discriminator.discriminator_head()        # Head for BCE
         self.dhead2 = Discriminator.discriminator_head()        # Head for Hinge Loss
         self.wandb = args.wandb
-        self.two_objectives = args.two_objectives
         self.lambda_cycle = lambda_cycle
         self.build((None,) + (self.height, self.width, self.channels))
 
@@ -119,9 +118,9 @@ class Model(keras.Model):
             # discriminator used to check, inputing fake images
             disc_fake_photo = self.p_disc(fake_photo, training=True)
             # evaluates generator loss
-            photo_gen_loss = self.gen_loss_fn(disc_fake_photo)
+            photo_gen_loss = self.gen_loss_fn1(disc_fake_photo)
             # evaluates discriminator loss
-            photo_disc_loss = self.disc_loss_fn(disc_real_photo, disc_fake_photo)
+            photo_disc_loss = self.disc_loss_fn1(disc_real_photo, disc_fake_photo)
 
             # evaluates total cycle consistency loss
             total_cycle_loss = self.cycle_loss_fn(real_monet, cycled_monet, self.lambda_cycle) + \
